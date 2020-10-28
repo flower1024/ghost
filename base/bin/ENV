@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+handleERR() {
+    echo "$0 Error on line $1"
+}
+set -e
+trap 'handleERR $LINENO' ERR
+
+VAR=$1
+
+[[ ! "$2" == "" ]] && VAR="${VAR}_${2}"
+[[ ! "$3" == "" ]] && VAR="${VAR}_${3}"
+[[ ! "$4" == "" ]] && VAR="${VAR}_${4}"
+
+VALUE=${!VAR}
+
+if [ "$VALUE" == "" ] && [[ ! "$2" == "" ]]
+then
+    VAR="$1_DEFAULT"
+
+    [[ ! "$3" == "" ]] && VAR="${VAR}_${3}"
+    [[ ! "$4" == "" ]] && VAR="${VAR}_${4}"
+fi
+
+VALUE=${!VAR}
+
+echo $VALUE

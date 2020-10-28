@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+handleERR() {
+    echo "$0 Error on line $1"
+}
+set -e
+trap 'handleERR $LINENO' ERR
+
+NUSER=$1
+NUID=$2
+NGROUP=$3
+NGID=$4
+
+OUID=$(id -u "$NUSER" 2>/dev/null || echo)
+OGID=$(cut -d: -f3 < <(getent group "$NGROUP"))
+
+if [ "$OGID" == "" ]
+then
+    LOG "USERS" "creating group $NGROUP"
+    addgroup --gid "$NGID" "$NGROUP"
+else
+    LOG "USERS" "setting GID $NGROUP"
+    groupmod -g "$NGID" "$NGROUP"
+    find / -group "$OGID" -not -path "/proc/*" -exec chgrp -h "$NGROUP" {} \;
+fi
+
+if [ "$OUID" == "" ]
+then
+    LOG "USERS" "creating user $NUSER"
+    useradd -u "$NUID" -g "$NGROUP" -d "/home/$NUSER" -s /bin/bash "$NUSER"
+else
+    LOG "USERS" "setting UID $NUSER"
+    usermod -u "$NUID" -g "$NGROUP" "$NUSER"
+    find / -user "$OUID" -not -path "/proc/*" -exec chown -h "$NUSER" {} \;
+fi
+
+LOG "USERS" "setting permissions $NUSER"
+[[ ! -d "/home/$NUSER" ]] && mkdir -p "/home/$NUSER"
+chown $NUSER:$NGROUP -R "/home/$NUSER"
+chsh -s /bin/bash "$NUSER"

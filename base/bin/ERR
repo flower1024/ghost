@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+handleERR() {
+    echo "$0 Error on line $1"
+}
+set -e
+trap 'handleERR $LINENO' ERR
+
+CMD=$1
+MSG=$2
+
+echo "[$CMD] $MSG" 1>&2
