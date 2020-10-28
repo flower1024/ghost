@@ -1,0 +1,2 @@
+# ghost
+debian base image
